@@ -1,0 +1,90 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    transition: 0.5s;
+}
+
+body{
+    font-family: sans-serif;
+    background-color: #fff;
+}
+
+#container{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, 260px);
+    grid-auto-rows: 240px;
+    grid-gap: 10px;
+}
+
+#container h1{
+    padding: 10px;
+    text-align: center;
+    font-size: 1.5em;
+}
+
+#container > div{
+    position: relative;
+    border: 1px solid #d1d1d1;
+    border-radius: 20px;
+    box-shadow: 4px 4px 8px #d1d1d1;
+}
+
+.choose select{
+    width: calc(100% - 10px);
+    height: 40px;
+    margin-bottom: 5px;
+    border: none;
+    cursor: pointer;
+    outline: none;
+    border: 1px solid #d1d1d1;
+    border-radius: 30px;
+    margin: 5px 5px;
+}
+
+.choose select:focus{
+    border: 1px solid #00FFB2;
+}
+
+div .fenyero{
+    width: 100%;
+    height: 40px;
+    background: linear-gradient(90deg, rgba(0,0,0,1) 0%, rgba(255,255,255,1) 100%);
+}
+
+div .szin{
+    width: 100%;
+    height: 40px;
+    background: linear-gradient(90deg, rgba(255,0,0,1) 0%, rgba(255,243,0,1) 16%, rgba(27,255,0,1) 32%, rgba(0,237,255,1) 48%, rgba(0,31,255,1) 64%, rgba(255,0,237,1) 80%, rgba(255,0,0,1) 100%);
+}
+
+div input{
+    width: 100%;
+    height: 20px;
+    margin: 5px 0;
+    outline: none;
+}
+
+div button{
+    position: absolute;
+    top: 100%;
+    transform: translateY(-100%);
+    width: 100%;
+    height: 45px;
+    border-radius: 0 0 20px 20px;
+    outline: none;
+    border: none;
+    background: #00FFB2;
+    color: #fff;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+div button:active{
+    background: #00E0FF;
+}

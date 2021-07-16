@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <title>Ping Pong Clock</title>
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+<div id="container">
+  <div class="brightness box">
+    <h1>LIGHT</h1>
+    <div class="choose">
+      <select id="bright">
+        <option value="10">AUTO</option>
+        <option value="11">MANUAL</option>
+      </select>
+    </div>
+    <div id="setBrightness">
+      <div class="fenyero"></div>
+      <input type="range" id="brightness" value="0" min="255" max="510" step="1"
+      />
+    </div>
+    <button id="sendBrightness">SEND</button>
+  </div>
+  <div class="color box">
+    <h1>COLOR</h1>
+    <div class="choose">
+      <select id="col">
+        <option value="12">AUTO</option>
+        <option value="13">MANUAL</option>
+      </select>
+    </div>
+    <div id="setColor">
+      <div class="szin"></div>
+      <input class="slide" type="range" id="color" value="0" min="255" max="510" step="1"
+      />
+    </div>
+    <button id="sendColor">SEND</button>
+  </div>
+  <div class="mutasd box">
+    <h1>SHOW</h1>
+    <div class="choose">
+      <select id="show">
+        <option value="14">AUTO</option>
+        <option value="15">TIME</option>
+        <option value="16">TEMPERATURE</option>
+        <option value="17">HUMIDITY</option>
+      </select>
+    </div>
+    <button id="sendshow">SEND</button>
+  </div>
+</div>
+<script src="js/jquery.min.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
