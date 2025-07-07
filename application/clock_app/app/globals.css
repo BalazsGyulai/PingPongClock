@@ -59,3 +59,20 @@ a {
 #frame{
   padding: 10px;
 }
+
+.color{
+  position: relative;
+  width: 350px;
+  height: 40px;
+}
+
+.color .reference{
+  width: 350px;
+  height: 10px;
+}
+
+.color input{
+  margin-top: 5px;
+  width: 350px;
+  height: 5px;
+}

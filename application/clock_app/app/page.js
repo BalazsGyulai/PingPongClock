@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from "react";
+import Image from 'next/image'
+import img from '/public/image.png'
 
 class mainScreen {
   constructor() {
@@ -43,7 +45,7 @@ class mainScreen {
     this.screen[row][column].brightness = b;
   }
 
-  changePixelHex(row, column, hex){
+  changePixelHex(row, column, hex) {
     this.screen[row][column].hex = hex;
   }
 
@@ -132,7 +134,6 @@ export default function Home() {
   }
 
   const RGBtoHSV = (r, g, b) => {
-    console.log(r)
     r /= 255, g /= 255, b /= 255;
 
     var max = Math.max(r, g, b), min = Math.min(r, g, b);
@@ -196,7 +197,7 @@ export default function Home() {
 
     setRefresh(r => !r);
     console.log(currentScreen.current.getScreen()[row][column]);
-    
+
 
     fetch(url, {
       method: "post",
@@ -224,7 +225,7 @@ export default function Home() {
               {
                 row.map((column, y) => (
                   column.led_id != -1 ?
-                    <div key={`${i}${y}`} className="led" onClick={() => ledChangeHandler(i, y)} style={{background: column.hex}}></div> : ""
+                    <div key={`${i}${y}`} className="led" onClick={() => ledChangeHandler(i, y)} style={{ background: column.hex }}></div> : ""
                 ))
               }
             </div>
@@ -232,6 +233,12 @@ export default function Home() {
         }
       </div>
 
+      <div className="color">
+        <div className="reference">
+          <Image src={img} width={350} height={15} />
+        </div>
+        <input type="range" min={0} max={255} />
+      </div>
       <input type="color" value={hexcolor} onChange={e => handleColorPicker(e.target.value)} />
 
       <p>H: {`${color}`}; S: {`${saturation}`}; V: {`${bright}`};</p>

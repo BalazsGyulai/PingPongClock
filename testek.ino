@@ -1,12 +1,10 @@
 // setup
 #include <FastLED.h>
+#include <MainScreen.h>
 #include <WifiModul.h>
 #include <Onboardled.h>
-#include <esp_heap_caps.h>
 
-#define LED_PIN 10
-#define NUM_LEDS 128
-CRGB leds[NUM_LEDS];
+#include <esp_heap_caps.h>
 
 TaskHandle_t Task0;
 
@@ -26,29 +24,13 @@ int screen[7][20] = {
   { -1, -1, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, -1 }
 };
 
-bool IsScreenValid(int row, int column) {  // return true when the screen value is not -1 therefore pixel can be set
-  if (screen[row][column] != -1) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-void WriteScreen(int row, int column) {
-  if (IsScreenValid(row, column)) {
-    // strip.setPixelColor(screen[row][column], strip.ColorHSV(color, saturation, brightness));
-    leds[screen[row][column]] = CHSV(color, saturation, brightness);
-
-    FastLED.show();
-  }
-}
-
-
-
+MainScreen myScreen(screen);
 OnBoardLed boardLed;
 _WifiGuide myWifi;
 
 void codeForCore0(void* param) {
+  myScreen.init_screen();
+
   myWifi.init_setup();
   myWifi.init_connection();
 
@@ -65,7 +47,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
 
-  FastLED.addLeds<WS2812, LED_PIN, GRB>(leds, NUM_LEDS);
+ 
 
   boardLed.init_led();
 
@@ -90,7 +72,6 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  WriteScreen(6, 2);
-  WriteScreen(6, 18);
+  myScreen.showScreen();
   boardLed.turnOnLed();
 }

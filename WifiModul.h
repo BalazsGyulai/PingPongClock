@@ -1,6 +1,7 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <ArduinoJson.h>
+extern MainScreen myScreen;
 
 class _WifiGuide
 {
@@ -103,11 +104,52 @@ public:
 
             if (!error)
             {
-                if (inputDoc.containsKey("players"))
+
+                // led_id: currentScreen.current.getScreen()[row][column].led_id,
+                // column: column,
+                // row: row,
+                // color: currentScreen.current.getScreen()[row][column].color,
+                // saturation: currentScreen.current.getScreen()[row][column].saturation,
+                // brightness:
+                int led_id;
+                int column;
+                int row;
+                int color;
+                int saturation;
+                int brightness;
+
+                if (inputDoc.containsKey("led_id"))
                 {
-                    int players = inputDoc["players"];
-                    Serial.println(players); 
+                    led_id = inputDoc["led_id"];
+                    Serial.println(led_id);
                 }
+                if (inputDoc.containsKey("column"))
+                {
+                    column = inputDoc["column"];
+                    Serial.println(column);
+                }
+                if (inputDoc.containsKey("row"))
+                {
+                    row = inputDoc["row"];
+                    Serial.println(row);
+                }
+                if (inputDoc.containsKey("color"))
+                {
+                    color = inputDoc["color"];
+                    Serial.println(color);
+                }
+                if (inputDoc.containsKey("saturation"))
+                {
+                    saturation = inputDoc["saturation"];
+                    Serial.println(saturation);
+                }
+                if (inputDoc.containsKey("brightness"))
+                {
+                    brightness = inputDoc["brightness"];
+                    Serial.println(brightness);
+                }
+
+                myScreen.changeLedStatus(row, column, color, saturation, brightness);
 
                 doc["received"] = inputDoc;
                 doc["status"] = "ok";
