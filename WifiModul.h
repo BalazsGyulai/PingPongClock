@@ -3,6 +3,9 @@
 #include <ArduinoJson.h>
 extern MainScreen myScreen;
 
+// StaticJsonDocument<1024> doc;
+// StaticJsonDocument<256> inputDoc;
+
 class _WifiGuide
 {
 private:
@@ -80,7 +83,8 @@ public:
     {
         this->server.sendHeader("Access-Control-Allow-Origin", "*");
         this->server.sendHeader("Content-Type", "application/json");
-        StaticJsonDocument<200> doc;
+        StaticJsonDocument<1024> doc;
+
         if (this->server.method() == HTTP_GET)
         {
 
@@ -98,58 +102,82 @@ public:
         }
         else if (this->server.method() == HTTP_POST)
         {
-
-            StaticJsonDocument<200> inputDoc;
+            StaticJsonDocument<256> inputDoc;
             DeserializationError error = deserializeJson(inputDoc, this->server.arg("plain"));
 
             if (!error)
             {
 
-                // led_id: currentScreen.current.getScreen()[row][column].led_id,
-                // column: column,
-                // row: row,
-                // color: currentScreen.current.getScreen()[row][column].color,
-                // saturation: currentScreen.current.getScreen()[row][column].saturation,
-                // brightness:
                 int led_id;
                 int column;
                 int row;
                 int color;
                 int saturation;
                 int brightness;
+                int mycase;
 
                 if (inputDoc.containsKey("led_id"))
                 {
                     led_id = inputDoc["led_id"];
-                    Serial.println(led_id);
                 }
                 if (inputDoc.containsKey("column"))
                 {
                     column = inputDoc["column"];
-                    Serial.println(column);
                 }
                 if (inputDoc.containsKey("row"))
                 {
                     row = inputDoc["row"];
-                    Serial.println(row);
                 }
                 if (inputDoc.containsKey("color"))
                 {
                     color = inputDoc["color"];
-                    Serial.println(color);
                 }
                 if (inputDoc.containsKey("saturation"))
                 {
                     saturation = inputDoc["saturation"];
-                    Serial.println(saturation);
                 }
                 if (inputDoc.containsKey("brightness"))
                 {
                     brightness = inputDoc["brightness"];
-                    Serial.println(brightness);
+                }
+                if (inputDoc.containsKey("mycase"))
+                {
+                    mycase = inputDoc["mycase"];
                 }
 
-                myScreen.changeLedStatus(row, column, color, saturation, brightness);
+                if (mycase == 0)
+                {
+                    MainScreenData(&screen)[7][20] = myScreen.getMainScreen();
+
+                    if (row >= 0 && row < 7)
+                    {
+                        JsonArray rowArr = doc.createNestedArray("screen_row");
+                        for (int j = 0; j < 20; j++)
+                        {
+                            JsonObject ledObj = rowArr.createNestedObject();
+                            ledObj["led_id"] = screen[row][j].led_id;
+                            ledObj["color"] = screen[row][j].color;
+                            ledObj["saturation"] = screen[row][j].saturation;
+                            ledObj["brightness"] = screen[row][j].brightness;
+                        }
+                        doc["status"] = "ok";
+                    }
+                    else
+                    {
+                        doc["status"] = "error";
+                        doc["error"] = "Invalid row";
+                    }
+                }
+                else
+                {
+                    doc["status"] = "error";
+                    doc["error"] = "Unknown or missing mycase";
+                }
+
+                if (row >= 0 && row < 7 && column >= 0 && column < 20)
+                {
+                    myScreen.changeLedStatus(row, column, color, saturation, brightness);
+                }
 
                 doc["received"] = inputDoc;
                 doc["status"] = "ok";

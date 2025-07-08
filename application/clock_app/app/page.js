@@ -31,6 +31,71 @@ class mainScreen {
     }
   }
 
+  update_screen(new_screen) { // updates the whole screen
+    for (let row = 0; row < new_screen.length; row++) {
+      for (let column = 0; column < new_screen[row].length; column++) {
+        let rgb = this.HSVtoRGB(new_screen[row][column].color, new_screen[row][column].saturation, new_screen[row][column].brightness);
+        let hex = this.rgbToHex(rgb[0], rgb[1], rgb[2]);
+        this.screen[row][column] = {
+          led_id: new_screen[row][column].led_id,
+          color: new_screen[row][column].color,
+          saturation: new_screen[row][column].saturation,
+          brightness: new_screen[row][column].brightness,
+          hex: hex == '#000000' ? '#ffffff' : hex
+        }
+      }
+    }
+  }
+
+  refresh_screen(new_screen) { // updates only specific values
+    for (let row = 0; row < this.screen.length; row++) {
+      for (let column = 0; column < this.screen[row].length; column++) {
+
+        // for (let i = 0; i < new_screen.length; i++) {
+
+        //   if (this.isLedTurnedOn())
+
+        // }
+
+      }
+    }
+  }
+
+  rgbToHex = (r, g, b) => {
+    return "#" + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
+  }
+
+  HSVtoRGB = (h, s, v) => {
+    h = h / 255 * 360;
+    s = s / 255;
+    v = v / 255;
+
+    let c = v * s;
+    let x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    let m = v - c;
+    let r1, g1, b1;
+
+    if (h >= 0 && h < 60) {
+      r1 = c; g1 = x; b1 = 0;
+    } else if (h < 120) {
+      r1 = x; g1 = c; b1 = 0;
+    } else if (h < 180) {
+      r1 = 0; g1 = c; b1 = x;
+    } else if (h < 240) {
+      r1 = 0; g1 = x; b1 = c;
+    } else if (h < 300) {
+      r1 = x; g1 = 0; b1 = c;
+    } else {
+      r1 = c; g1 = 0; b1 = x;
+    }
+
+    let r = Math.round((r1 + m) * 255);
+    let g = Math.round((g1 + m) * 255);
+    let b = Math.round((b1 + m) * 255);
+
+    return [r, g, b];
+  }
+
   getScreen() {
     return this.screen;
   }
@@ -55,6 +120,111 @@ class mainScreen {
     this.changePixelBrightness(row, column, b);
     this.changePixelHex(row, column, hex);
   }
+
+  moveDigit(drawing, moveX, moveY) {
+    let can_be_moved = true;
+
+    for (let i = 0; i < drawing.length; i++) {
+      let row = drawing[i].row + moveY;
+      let column = drawing[i].column + moveX;
+
+      if (row < 0 || row >= 7 || column < 0 || column >= 20) {
+        can_be_moved = false;
+      }
+
+      if (can_be_moved && this.screen[row][column].led_id == -1) {
+        can_be_moved = false;
+      }
+    }
+
+    if (can_be_moved) {
+      let new_drawing_pos = []
+
+      for (let i = 0; i < drawing.length; i++) {
+        let row = drawing[i].row + moveY;
+        let column = drawing[i].column + moveX;
+
+        new_drawing_pos.push({
+          row: row,
+          column: column,
+          led_id: this.screen[row][column].led_id,
+          color: drawing[i].color,
+          saturation: drawing[i].saturation,
+          brightness: drawing[i].brightness,
+          hex: drawing[i].hex
+        })
+      }
+
+      return new_drawing_pos;
+    }
+
+  }
+
+  isLedTurnedOn = (row, column) => {
+    if (this.screen[row][column].color != 0 ||
+      this.screen[row][column].saturation != 0 ||
+      this.screen[row][column].brightness != 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  moveToSide(drawing, moveX, moveY) {
+    let new_draw = drawing
+    let count_move = 0;
+    let can_be_moved = true;
+    while (can_be_moved && count_move < 20) {
+      new_draw = this.moveDigit(new_draw, moveX, moveY);
+
+      count_move++;
+    }
+
+    return new_draw;
+  }
+}
+
+class CustomDigit {
+  constructor() {
+    this.digit;
+  }
+
+  show_digit() {
+    return this.digit;
+  }
+
+  edit_digit(screen) {
+
+    let selected_leds = [];
+
+    for (let i = 0; i < 7; i++) {
+      for (let y = 0; y < 20; y++) {
+        if (this.isLedTurnedOn(screen[i][y])) {
+          selected_leds.push({
+            row: i,
+            column: y,
+            led_id: screen[i][y].led_id,
+            color: screen[i][y].color,
+            saturation: screen[i][y].saturation,
+            brightness: screen[i][y].brightness,
+            hex: screen[i][y].hex
+          });
+        }
+      }
+    }
+
+    this.digit = selected_leds;
+  }
+
+  isLedTurnedOn = (elem) => {
+    if (elem.color != 0 ||
+      elem.saturation != 0 ||
+      elem.brightness != 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }
 
 
@@ -65,18 +235,49 @@ export default function Home() {
   const [hexcolor, setHexColor] = useState('#ff0000');
   const [rerenderFlag, setRerenderFlag] = useState(false);
   const [refresh, setRefresh] = useState(false);
+  const [clock_screen, setClockScreen] = useState([]);
+  const [drawedDigits, setDrawDigits] = useState([]);
 
   const currentScreen = useRef();
 
+  const url = `http://192.168.0.29`;
+
+  const getClockStatus = async () => {
+    let allRows = [];
+    for (let row = 0; row < 7; row++) {
+      await fetch(url, {
+        method: "post",
+        body: JSON.stringify({
+          mycase: 0,
+          row: row
+        }),
+      })
+        .then((data) => data.json())
+        .then((data) => {
+          console.log(data);
+          allRows.push(data['screen_row']);
+        });
+
+    }
+
+    setClockScreen(allRows);
+  }
   useEffect(() => {
     currentScreen.current = new mainScreen();
     currentScreen.current.init_screen();
     setRerenderFlag(flag => !flag);
+
+    getClockStatus();
   }, []);
+
+  useEffect(() => {
+    currentScreen.current.update_screen(clock_screen);
+    setRerenderFlag(flag => !flag);
+    console.log(currentScreen.current.getScreen())
+  }, [clock_screen])
 
   if (!currentScreen.current) return null;
 
-  const url = `http://192.168.0.29`;
 
   const sendMessage = async () => {
     const data = await fetch('http://192.168.0.29?message=olaaah');
@@ -98,39 +299,36 @@ export default function Home() {
 
   }
 
-  const screen = [
-    [-1, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, -1],
-    [-1, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, -1],
-    [-1, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53],
-    [73, 72, 71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54],
-    [-1, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92],
-    [-1, 110, 109, 108, 107, 106, 105, 104, 103, 102, 101, 100, 99, 98, 97, 96, 95, 94, 93, -1],
-    [-1, -1, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, -1]
-  ];
 
   const HSVtoRGB = (h, s, v) => {
-    var r, g, b, i, f, p, q, t;
-    if (arguments.length === 1) {
-      s = h.s, v = h.v, h = h.h;
+    h = h / 255 * 360;
+    s = s / 255;
+    v = v / 255;
+
+    let c = v * s;
+    let x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    let m = v - c;
+    let r1, g1, b1;
+
+    if (h >= 0 && h < 60) {
+      r1 = c; g1 = x; b1 = 0;
+    } else if (h < 120) {
+      r1 = x; g1 = c; b1 = 0;
+    } else if (h < 180) {
+      r1 = 0; g1 = c; b1 = x;
+    } else if (h < 240) {
+      r1 = 0; g1 = x; b1 = c;
+    } else if (h < 300) {
+      r1 = x; g1 = 0; b1 = c;
+    } else {
+      r1 = c; g1 = 0; b1 = x;
     }
-    i = Math.floor(h * 6);
-    f = h * 6 - i;
-    p = v * (1 - s);
-    q = v * (1 - f * s);
-    t = v * (1 - (1 - f) * s);
-    switch (i % 6) {
-      case 0: r = v, g = t, b = p; break;
-      case 1: r = q, g = v, b = p; break;
-      case 2: r = p, g = v, b = t; break;
-      case 3: r = p, g = q, b = v; break;
-      case 4: r = t, g = p, b = v; break;
-      case 5: r = v, g = p, b = q; break;
-    }
-    return {
-      r: Math.round(r * 255),
-      g: Math.round(g * 255),
-      b: Math.round(b * 255)
-    };
+
+    let r = Math.round((r1 + m) * 255);
+    let g = Math.round((g1 + m) * 255);
+    let b = Math.round((b1 + m) * 255);
+
+    return [r, g, b];
   }
 
   const RGBtoHSV = (r, g, b) => {
@@ -170,16 +368,22 @@ export default function Home() {
     return "#" + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
   }
 
-  const handleColorPicker = (val) => {
-    setHexColor(val);
+  const handleColorChange = (e) => {
+    let rgb = HSVtoRGB(e.target.value, saturation, bright);
+    setHexColor(rgbToHex(rgb[0], rgb[1], rgb[2]));
+    setColor(e.target.value);
+  }
 
-    let rgb = hexToRGB(val);
+  const handleSaturationChange = (e) => {
+    let rgb = HSVtoRGB(color, e.target.value, bright);
+    setHexColor(rgbToHex(rgb[0], rgb[1], rgb[2]));
+    setSaturation(e.target.value);
+  }
 
-    let hsv = RGBtoHSV(rgb['r'], rgb['g'], rgb['b']);
-
-    setColor(hsv[0]);
-    setSaturation(hsv[1]);
-    setBright(hsv[2]);
+  const handleBrightnessChange = (e) => {
+    let rgb = HSVtoRGB(color, saturation, e.target.value);
+    setHexColor(rgbToHex(rgb[0], rgb[1], rgb[2]));
+    setBright(e.target.value);
 
   }
 
@@ -196,7 +400,12 @@ export default function Home() {
     }
 
     setRefresh(r => !r);
+
+
+
+
     console.log(currentScreen.current.getScreen()[row][column]);
+
 
 
     fetch(url, {
@@ -214,6 +423,83 @@ export default function Home() {
       .then((data) => {
         console.log(data);
       });
+  }
+
+  const isLedTurnedOn = (row, column) => {
+    if (currentScreen.current.getScreen()[row][column].color != 0 ||
+      currentScreen.current.getScreen()[row][column].saturation != 0 ||
+      currentScreen.current.getScreen()[row][column].brightness != 0) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  const moveDrawToSide = (draw, moveX, moveY) => {
+
+    let selected_leds = draw;
+    let count_move = 0;
+    let can_be_moved = true;
+    while (can_be_moved && count_move < 20) {
+      for (let i = 0; i < selected_leds.length; i++) {
+        let row = selected_leds[i][0] + moveY;
+        let column = selected_leds[i][1] + moveX;
+
+        if (row < 0 || row >= 7 || column < 0 || column >= 20) {
+          can_be_moved = false;
+        }
+
+        if (can_be_moved && currentScreen.current.getScreen()[row][column].led_id == -1) {
+          can_be_moved = false;
+        }
+      }
+
+      if (can_be_moved) {
+        for (let i = 0; i < selected_leds.length; i++) {
+          selected_leds[i] = [selected_leds[i][0] + moveY, selected_leds[i][1] + moveX];
+        }
+      }
+
+
+
+      count_move++;
+    }
+
+    return selected_leds;
+  }
+
+  const saveDigitOne = () => {
+    let digit = new CustomDigit();
+
+    digit.edit_digit(currentScreen.current.getScreen());
+
+    console.log(digit.show_digit());
+
+    digit.edit_digit(currentScreen.current.moveToSide(digit.show_digit(), -1, 0));
+
+    console.log(currentScreen.current.moveToSide(digit.show_digit(), -1, 0));
+
+    // let selected_leds = [];
+
+    // for (let i = 0; i < 7; i++) {
+    //   for (let y = 0; y < 20; y++) {
+    //     if (isLedTurnedOn(i, y)) {
+    //       selected_leds.push({
+    //         row: i,
+    //         column: y,
+    //         led_id: currentScreen.current.getScreen()[i][y].led_id,
+    //         color: currentScreen.current.getScreen()[i][y].color,
+    //         saturation: currentScreen.current.getScreen()[i][y].saturation,
+    //         brightness: currentScreen.current.getScreen()[i][y].brightness,
+    //         hex: currentScreen.current.getScreen()[i][y].hex
+    //       });
+    //     }
+    //   }
+    // }
+
+
+    // selected_leds = moveDrawToSide(selected_leds, -1, 0);
+
   }
 
   return (
@@ -234,14 +520,26 @@ export default function Home() {
       </div>
 
       <div className="color">
+        <span>Color: {`${color}`}</span>
         <div className="reference">
-          <Image src={img} width={350} height={15} />
+          <Image src={img} width={350} height={15} alt={'colors'} />
         </div>
-        <input type="range" min={0} max={255} />
-      </div>
-      <input type="color" value={hexcolor} onChange={e => handleColorPicker(e.target.value)} />
+        <input type="range" min={0} max={255} value={color} onChange={e => handleColorChange(e)} />
+        <span>Saturation: {`${saturation}`}</span>
+        <input type="range" min={0} max={255} value={saturation} onChange={e => handleSaturationChange(e)} />
+        <span>Brightness: {`${bright}`}</span>
+        <input type="range" min={0} max={255} value={bright} onChange={e => handleBrightnessChange(e)} />
 
-      <p>H: {`${color}`}; S: {`${saturation}`}; V: {`${bright}`};</p>
+      </div>
+
+      <div className="digits">
+        <button onClick={saveDigitOne}>Save Digit 1</button>
+
+      </div>
+
+
+      {/* <input type="color" value={hexcolor} onChange={e => handleColorPicker(e.target.value)} /> */}
+
     </div>
   );
 }

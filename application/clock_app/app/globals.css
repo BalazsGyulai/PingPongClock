@@ -62,17 +62,22 @@ a {
 
 .color{
   position: relative;
+  padding: 0 5px;
   width: 350px;
-  height: 40px;
+  height: auto;
 }
 
 .color .reference{
   width: 350px;
-  height: 10px;
+  height: 15px;
+}
+
+.color span{
+  padding: 3px 5px;
 }
 
 .color input{
-  margin-top: 5px;
+  margin-bottom: 10px;
   width: 350px;
-  height: 5px;
+  height: 10px;
 }

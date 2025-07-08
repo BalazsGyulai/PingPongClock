@@ -52,18 +52,14 @@ void setup() {
   boardLed.init_led();
 
   // uint32_t freeHeapBefore = esp_get_free_heap_size();
-  // myWifi.init_setup();
-  // myWifi.scan_ssid();
-  // if (myWifi.isThereTheRightNetwork()) {
-  //   myWifi.init_connection();
-  // }
+  // codeForCore0();
   // uint32_t freeHeapAfter = esp_get_free_heap_size();
   // Serial.println(freeHeapBefore - freeHeapAfter);
 
   xTaskCreatePinnedToCore(
     codeForCore0,
     "Task_0",
-    61790,
+    100000,
     NULL,
     1,
     &Task0,
