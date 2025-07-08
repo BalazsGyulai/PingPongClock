@@ -47,16 +47,31 @@ class mainScreen {
     }
   }
 
-  refresh_screen(new_screen) { // updates only specific values
+  write_digit(digit) { // updates only specific values
     for (let row = 0; row < this.screen.length; row++) {
       for (let column = 0; column < this.screen[row].length; column++) {
+        this.screen[row][column] = {
+          led_id: this.screen[row][column].led_id,
+          color: 0,
+          saturation: 0,
+          brightness: 0,
+          hex: '#ffffff'
+        }
+      }
+    }
 
-        // for (let i = 0; i < new_screen.length; i++) {
+    for (let i = 0; i < digit.length; i++) {
 
-        //   if (this.isLedTurnedOn())
+      let rgb = this.HSVtoRGB(digit[i].color, digit[i].saturation, digit[i].brightness);
+      let hex = this.rgbToHex(rgb[0], rgb[1], rgb[2]);
 
-        // }
 
+      this.screen[digit[i].row][digit[i].column] = {
+        led_id: digit[i].led_id,
+        color: digit[i].color,
+        saturation: digit[i].saturation,
+        brightness: digit[i].brightness,
+        hex: hex
       }
     }
   }
@@ -121,6 +136,9 @@ class mainScreen {
     this.changePixelHex(row, column, hex);
   }
 
+
+
+
   moveDigit(drawing, moveX, moveY) {
     let can_be_moved = true;
 
@@ -171,11 +189,41 @@ class mainScreen {
   }
 
   moveToSide(drawing, moveX, moveY) {
-    let new_draw = drawing
+    let new_draw = drawing;
     let count_move = 0;
     let can_be_moved = true;
+
     while (can_be_moved && count_move < 20) {
-      new_draw = this.moveDigit(new_draw, moveX, moveY);
+      for (let i = 0; i < new_draw.length; i++) {
+        let row = new_draw[i].row + moveY;
+        let column = new_draw[i].column + moveX;
+
+
+        if (row < 0 || row >= 7 || column < 0 || column >= 20) {
+          can_be_moved = false;
+        }
+
+        if (can_be_moved && this.screen[row][column].led_id == -1) {
+          can_be_moved = false;
+        }
+      }
+
+      if (can_be_moved) {
+        for (let i = 0; i < new_draw.length; i++) {
+          let row = new_draw[i].row + moveY;
+          let column = new_draw[i].column + moveX;
+
+          new_draw[i] = {
+            row: row,
+            column: column,
+            led_id: this.screen[row][column].led_id,
+            color: drawing[i].color,
+            saturation: drawing[i].saturation,
+            brightness: drawing[i].brightness,
+            hex: drawing[i].hex
+          }
+        }
+      }
 
       count_move++;
     }
@@ -193,7 +241,7 @@ class CustomDigit {
     return this.digit;
   }
 
-  edit_digit(screen) {
+  init_digit(screen) {
 
     let selected_leds = [];
 
@@ -214,6 +262,10 @@ class CustomDigit {
     }
 
     this.digit = selected_leds;
+  }
+
+  edit_digit(digit) {
+    this.digit = digit;
   }
 
   isLedTurnedOn = (elem) => {
@@ -471,13 +523,19 @@ export default function Home() {
   const saveDigitOne = () => {
     let digit = new CustomDigit();
 
-    digit.edit_digit(currentScreen.current.getScreen());
+    digit.init_digit(currentScreen.current.getScreen());
 
+
+    // digit.edit_digit(currentScreen.current.moveToSide(digit.show_digit(), -1, 0));
+
+    // console.log(currentScreen.current.moveToSide(digit.show_digit(), -1, 0));
+    digit.edit_digit(currentScreen.current.moveToSide(digit.show_digit(), -1, 0))
     console.log(digit.show_digit());
 
-    digit.edit_digit(currentScreen.current.moveToSide(digit.show_digit(), -1, 0));
+    currentScreen.current.write_digit(digit.show_digit());
 
-    console.log(currentScreen.current.moveToSide(digit.show_digit(), -1, 0));
+    console.log(currentScreen.current.getScreen());
+    setRefresh(r => !r);
 
     // let selected_leds = [];
 
